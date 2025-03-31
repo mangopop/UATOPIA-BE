@@ -42,6 +42,7 @@ security:
         - { path: ^/api/tests, roles: IS_AUTHENTICATED_FULLY }
         - { path: ^/api, roles: IS_AUTHENTICATED_FULLY }
         - { path: ^/api/templates, roles: IS_AUTHENTICATED_FULLY }
+        - { path: ^/api/stories, roles: IS_AUTHENTICATED_FULLY }
 
 when@test:
     security:

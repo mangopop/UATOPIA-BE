@@ -6,23 +6,30 @@ use App\Repository\StoryRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Annotation\Groups;
 
 #[ORM\Entity]
 class Story
 {
+    public const GROUP_READ = 'story:read';
+
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
+    #[Groups([self::GROUP_READ])]
     private ?int $id = null;
 
     #[ORM\Column(length: 255)]
+    #[Groups([self::GROUP_READ])]
     private ?string $name = null;
 
     #[ORM\ManyToOne(inversedBy: 'stories')]
     #[ORM\JoinColumn(nullable: false)]
+    #[Groups([self::GROUP_READ])]
     private ?User $owner = null;
 
     #[ORM\ManyToMany(targetEntity: Template::class, inversedBy: 'stories')]
+    #[Groups([self::GROUP_READ])]
     private Collection $templates;
 
     #[ORM\ManyToMany(targetEntity: Folder::class, mappedBy: 'stories')]
