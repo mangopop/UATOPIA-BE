@@ -26,5 +26,41 @@ class Category
         $this->tests = new ArrayCollection();
     }
 
-    // Getters and setters...
+    public function getId(): ?int
+    {
+        return $this->id;
+    }
+
+    public function getName(): ?string
+    {
+        return $this->name;
+    }
+
+    public function setName(string $name): self
+    {
+        $this->name = $name;
+        return $this;
+    }
+
+    public function getTests(): Collection
+    {
+        return $this->tests;
+    }
+
+    public function addTest(Test $test): self
+    {
+        if (!$this->tests->contains($test)) {
+            $this->tests->add($test);
+            $test->addCategory($this);
+        }
+        return $this;
+    }
+
+    public function removeTest(Test $test): self
+    {
+        if ($this->tests->removeElement($test)) {
+            $test->removeCategory($this);
+        }
+        return $this;
+    }
 }
