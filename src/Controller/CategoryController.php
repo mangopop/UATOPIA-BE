@@ -9,31 +9,41 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;
+use App\Dto\CategoryRequest;
+use App\Service\ValidationService;
+use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 #[Route('/api/categories', name: 'api_categories_')]
 class CategoryController extends AbstractController
 {
+    public function __construct(
+        private readonly ValidationService $validationService,
+        private readonly EntityManagerInterface $entityManager,
+        private readonly CategoryRepository $categoryRepository
+    ) {}
+
     #[Route('', name: 'index', methods: ['GET'])]
-    public function index(CategoryRepository $categoryRepository): JsonResponse
+    public function index(): JsonResponse
     {
-        $categories = $categoryRepository->findAll();
-        return $this->json($categories);
+        $categories = $this->categoryRepository->findAll();
+        return $this->json($categories, 200, [], ['groups' => ['category:read']]);
     }
 
     #[Route('', name: 'create', methods: ['POST'])]
-    public function create(Request $request, EntityManagerInterface $entityManager): JsonResponse
+    public function create(Request $request, ValidatorInterface $validator): JsonResponse
     {
-        $data = json_decode($request->getContent(), true);
+        $data = json_decode($request->getContent(), true) ?? [];
+        $categoryRequest = CategoryRequest::fromRequest($data);
 
-        if (!isset($data['name'])) {
-            return $this->json(['error' => 'Name is required'], 400);
+        if ($response = $this->validationService->validate($categoryRequest)) {
+            return $response;
         }
 
         $category = new Category();
-        $category->setName($data['name']);
+        $category->setName($categoryRequest->name);
 
-        $entityManager->persist($category);
-        $entityManager->flush();
+        $this->entityManager->persist($category);
+        $this->entityManager->flush();
 
         return $this->json($category, 201);
     }
