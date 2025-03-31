@@ -2,30 +2,37 @@
 
 namespace App\Entity;
 
-use App\Repository\TemplateRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Annotation\Groups;
 
 #[ORM\Entity]
 class Template
 {
+    public const GROUP_READ = 'template:read';
+
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
+    #[Groups([self::GROUP_READ])]
     private ?int $id = null;
 
     #[ORM\Column(length: 255)]
+    #[Groups([self::GROUP_READ])]
     private ?string $name = null;
 
     #[ORM\ManyToOne(inversedBy: 'templates')]
     #[ORM\JoinColumn(nullable: false)]
+    #[Groups([self::GROUP_READ])]
     private ?User $owner = null;
 
     #[ORM\ManyToMany(targetEntity: Test::class, inversedBy: 'templates')]
+    #[Groups([self::GROUP_READ])]
     private Collection $tests;
 
     #[ORM\ManyToMany(targetEntity: Story::class, mappedBy: 'templates')]
+    #[Groups([self::GROUP_READ])]
     private Collection $stories;
 
     public function __construct()
