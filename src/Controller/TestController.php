@@ -116,4 +116,11 @@ class TestController extends AbstractController
 
         return $this->json(null, 204);
     }
+
+    #[Route('/by-template/{templateId}', name: 'by_template', methods: ['GET'])]
+    public function getByTemplate(int $templateId): JsonResponse
+    {
+        $tests = $this->testRepository->findByTemplateId($templateId);
+        return $this->json($tests, 200, [], ['groups' => [Test::GROUP_READ]]);
+    }
 }

@@ -16,24 +16,24 @@ class Test
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
-    #[Groups([self::GROUP_READ, Template::GROUP_READ])]
+    #[Groups([self::GROUP_READ, Template::GROUP_READ, Story::GROUP_READ])]
     private ?int $id = null;
 
     #[ORM\Column(length: 255)]
-    #[Groups([self::GROUP_READ, Template::GROUP_READ])]
+    #[Groups([self::GROUP_READ, Template::GROUP_READ, Story::GROUP_READ])]
     private ?string $name = null;
 
     #[ORM\ManyToOne(inversedBy: 'tests')]
     #[ORM\JoinColumn(nullable: false)]
-    #[Groups([self::GROUP_READ, Template::GROUP_READ])]
+    #[Groups([self::GROUP_READ, Template::GROUP_READ, Story::GROUP_READ])]
     private ?User $owner = null;
 
     #[ORM\Column(type: 'text', nullable: true)]
-    #[Groups([self::GROUP_READ, Template::GROUP_READ])]
+    #[Groups([self::GROUP_READ, Template::GROUP_READ, Story::GROUP_READ])]
     private ?string $notes = null;
 
     #[ORM\ManyToMany(targetEntity: Category::class, inversedBy: 'tests')]
-    #[Groups([self::GROUP_READ])]
+    #[Groups([self::GROUP_READ, Template::GROUP_READ, Story::GROUP_READ])]
     private Collection $categories;
 
     #[ORM\ManyToMany(targetEntity: Template::class, mappedBy: 'tests')]

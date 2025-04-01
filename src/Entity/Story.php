@@ -35,9 +35,19 @@ class Story
     #[ORM\ManyToMany(targetEntity: Folder::class, mappedBy: 'stories')]
     private Collection $folders;
 
+    #[ORM\OneToMany(
+        mappedBy: 'story',
+        targetEntity: StoryTestResult::class,
+        orphanRemoval: true,
+        cascade: ['persist']
+    )]
+    #[Groups([self::GROUP_READ])]
+    private Collection $testResults;
+
     public function __construct()
     {
         $this->templates = new ArrayCollection();
+        $this->testResults = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -108,6 +118,40 @@ class Story
         if ($this->folders->removeElement($folder)) {
             $folder->removeStory($this);
         }
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, StoryTestResult>
+     */
+    public function getTestResults(): Collection
+    {
+        return $this->testResults;
+    }
+
+    public function getTestResult(Test $test): ?StoryTestResult
+    {
+        foreach ($this->testResults as $result) {
+            if ($result->getTest() === $test) {
+                return $result;
+            }
+        }
+        return null;
+    }
+
+    public function setTestResult(Test $test, bool $passed, ?string $notes = null): self
+    {
+        $result = $this->getTestResult($test);
+        if (!$result) {
+            $result = new StoryTestResult();
+            $result->setStory($this)
+                  ->setTest($test);
+            $this->testResults->add($result);
+        }
+
+        $result->setPassed($passed)
+              ->setNotes($notes);
+
         return $this;
     }
 }

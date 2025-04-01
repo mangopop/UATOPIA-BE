@@ -12,6 +12,9 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;
+use App\Repository\TestRepository;
+use App\Dto\StoryTestResultRequest;
+use App\Entity\StoryTestResult;
 
 #[Route('/api/stories', name: 'api_stories_')]
 class StoryController extends AbstractController
@@ -112,5 +115,36 @@ class StoryController extends AbstractController
         $this->entityManager->flush();
 
         return $this->json(null, 204);
+    }
+
+    #[Route('/{id}/test-results', name: 'update_test_results', methods: ['POST'])]
+    public function updateTestResults(
+        Request $request,
+        Story $story,
+        TestRepository $testRepository
+    ): JsonResponse
+    {
+        $data = json_decode($request->getContent(), true) ?? [];
+        $testResultRequest = StoryTestResultRequest::fromRequest($data);
+
+        if ($response = $this->validationService->validate($testResultRequest)) {
+            return $response;
+        }
+
+        $test = $testRepository->find($testResultRequest->testId);
+        if (!$test) {
+            return $this->json(['errors' => ['Test not found']], 404);
+        }
+
+        $result = new StoryTestResult();
+        $result->setTest($test)
+              ->setStory($story)
+              ->setPassed($testResultRequest->passed)
+              ->setNotes($testResultRequest->notes);
+
+        $this->entityManager->persist($result);
+        $this->entityManager->flush();
+
+        return $this->json($story, 200, [], ['groups' => [Story::GROUP_READ]]);
     }
 }

@@ -49,4 +49,19 @@ class TestRepository extends ServiceEntityRepository
             ->getQuery()
             ->getResult();
     }
+
+    public function findByTemplateId(int $templateId): array
+    {
+        return $this->createQueryBuilder('t')
+            ->leftJoin('t.categories', 'c')
+            ->addSelect('c')
+            ->leftJoin('t.owner', 'o')
+            ->addSelect('o')
+            ->innerJoin('t.templates', 'template')
+            ->andWhere('template.id = :templateId')
+            ->setParameter('templateId', $templateId)
+            ->orderBy('t.name', 'ASC')
+            ->getQuery()
+            ->getResult();
+    }
 }
