@@ -117,7 +117,7 @@ class StoryController extends AbstractController
         return $this->json(null, 204);
     }
 
-    #[Route('/{id}/test-results', name: 'update_test_results', methods: ['POST'])]
+    #[Route('/{id}/test-results', name: 'update_test_results', methods: ['PUT'])]
     public function updateTestResults(
         Request $request,
         Story $story,
@@ -139,7 +139,7 @@ class StoryController extends AbstractController
         $result = new StoryTestResult();
         $result->setTest($test)
               ->setStory($story)
-              ->setPassed($testResultRequest->passed)
+              ->setStatus($testResultRequest->status)
               ->setNotes($testResultRequest->notes);
 
         $this->entityManager->persist($result);

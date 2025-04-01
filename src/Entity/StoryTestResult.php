@@ -8,6 +8,10 @@ use Symfony\Component\Serializer\Annotation\Groups;
 #[ORM\Entity]
 class StoryTestResult
 {
+    public const STATUS_NOT_TESTED = 'not_tested';
+    public const STATUS_PASSED = 'passed';
+    public const STATUS_FAILED = 'failed';
+
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
@@ -23,9 +27,9 @@ class StoryTestResult
     #[Groups([Story::GROUP_READ])]
     private ?Test $test = null;
 
-    #[ORM\Column]
+    #[ORM\Column(length: 20)]
     #[Groups([Story::GROUP_READ])]
-    private bool $passed = false;
+    private string $status = self::STATUS_NOT_TESTED;
 
     #[ORM\Column(type: 'text', nullable: true)]
     #[Groups([Story::GROUP_READ])]
@@ -58,14 +62,17 @@ class StoryTestResult
         return $this;
     }
 
-    public function isPassed(): bool
+    public function getStatus(): string
     {
-        return $this->passed;
+        return $this->status;
     }
 
-    public function setPassed(bool $passed): self
+    public function setStatus(string $status): self
     {
-        $this->passed = $passed;
+        if (!in_array($status, [self::STATUS_NOT_TESTED, self::STATUS_PASSED, self::STATUS_FAILED])) {
+            throw new \InvalidArgumentException('Invalid status');
+        }
+        $this->status = $status;
         return $this;
     }
 
