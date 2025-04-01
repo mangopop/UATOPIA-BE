@@ -136,13 +136,29 @@ class StoryController extends AbstractController
             return $this->json(['errors' => ['Test not found']], 404);
         }
 
-        $result = new StoryTestResult();
-        $result->setTest($test)
-              ->setStory($story)
-              ->setStatus($testResultRequest->status)
-              ->setNotes($testResultRequest->notes);
+        // Find existing test result
+        $existingResult = $this->entityManager->getRepository(StoryTestResult::class)
+            ->findOneBy([
+                'story' => $story,
+                'test' => $test
+            ]);
 
-        $this->entityManager->persist($result);
+        if ($existingResult) {
+            // Update existing result
+            $existingResult
+                ->setStatus($testResultRequest->status)
+                ->setNotes($testResultRequest->notes);
+        } else {
+            // Create new result
+            $result = new StoryTestResult();
+            $result->setTest($test)
+                  ->setStory($story)
+                  ->setStatus($testResultRequest->status)
+                  ->setNotes($testResultRequest->notes);
+
+            $this->entityManager->persist($result);
+        }
+
         $this->entityManager->flush();
 
         return $this->json($story, 200, [], ['groups' => [Story::GROUP_READ]]);
