@@ -8,17 +8,30 @@ use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
+use Symfony\Component\Serializer\Annotation\Groups;
 
 #[ORM\Entity]
 class User implements UserInterface, PasswordAuthenticatedUserInterface
 {
+    public const GROUP_READ = 'user:read';
+
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
+    #[Groups([self::GROUP_READ, Test::GROUP_READ, Template::GROUP_READ, Story::GROUP_READ])]
     private ?int $id = null;
 
     #[ORM\Column(length: 180, unique: true)]
+    #[Groups([self::GROUP_READ, Test::GROUP_READ, Template::GROUP_READ, Story::GROUP_READ])]
     private ?string $email = null;
+
+    #[ORM\Column(length: 255)]
+    #[Groups([self::GROUP_READ, Test::GROUP_READ, Template::GROUP_READ, Story::GROUP_READ])]
+    private ?string $firstName = null;
+
+    #[ORM\Column(length: 255)]
+    #[Groups([self::GROUP_READ, Test::GROUP_READ, Template::GROUP_READ, Story::GROUP_READ])]
+    private ?string $lastName = null;
 
     #[ORM\Column]
     private array $roles = [];
@@ -165,6 +178,28 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
                 $story->setOwner(null);
             }
         }
+        return $this;
+    }
+
+    public function getFirstName(): ?string
+    {
+        return $this->firstName;
+    }
+
+    public function setFirstName(string $firstName): self
+    {
+        $this->firstName = $firstName;
+        return $this;
+    }
+
+    public function getLastName(): ?string
+    {
+        return $this->lastName;
+    }
+
+    public function setLastName(string $lastName): self
+    {
+        $this->lastName = $lastName;
         return $this;
     }
 

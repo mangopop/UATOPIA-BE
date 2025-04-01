@@ -16,14 +16,27 @@ class StoryRepository extends ServiceEntityRepository
     public function findAllSorted(): array
     {
         return $this->createQueryBuilder('s')
+            ->select('s, t, o')  // Explicitly select all joined entities
+            ->leftJoin('s.templates', 't')
+            ->leftJoin('s.owner', 'o')
             ->orderBy('s.name', 'ASC')
             ->getQuery()
             ->getResult();
+    // }
+        // For debugging, let's see the SQL
+        // $query = $qb->getQuery();
+        // dump($query->getSQL());
+
+        // return $query->getResult();
     }
 
     public function findByOwner(int $ownerId): array
     {
         return $this->createQueryBuilder('s')
+            ->leftJoin('s.templates', 't')
+            ->addSelect('t')
+            ->leftJoin('s.owner', 'o')
+            ->addSelect('o')
             ->andWhere('s.owner = :ownerId')
             ->setParameter('ownerId', $ownerId)
             ->orderBy('s.name', 'ASC')

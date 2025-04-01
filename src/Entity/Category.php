@@ -14,14 +14,15 @@ class Category
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
-    #[Groups(['category:read'])]
+    #[Groups(['category:read', Test::GROUP_READ])]
     private ?int $id = null;
 
     #[ORM\Column(length: 255)]
-    #[Groups(['category:read'])]
+    #[Groups(['category:read', Test::GROUP_READ])]
     private ?string $name = null;
 
     #[ORM\ManyToMany(targetEntity: Test::class, mappedBy: 'categories')]
+    #[Groups(['category:read'])]
     private Collection $tests;
 
     public function __construct()

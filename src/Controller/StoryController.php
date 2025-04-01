@@ -27,6 +27,8 @@ class StoryController extends AbstractController
     public function index(): JsonResponse
     {
         $stories = $this->storyRepository->findAllSorted();
+
+        // dd($stories);
         return $this->json($stories, 200, [], ['groups' => [Story::GROUP_READ]]);
     }
 
