@@ -3,7 +3,9 @@
 namespace App\Controller;
 
 use App\Dto\TestRequest;
+use App\Dto\TestSectionRequest;
 use App\Entity\Test;
+use App\Entity\TestSection;
 use App\Repository\TestRepository;
 use App\Repository\CategoryRepository;
 use App\Service\ValidationService;
@@ -31,6 +33,27 @@ class TestController extends AbstractController
         return $this->json($tests, 200, [], ['groups' => [Test::GROUP_READ]]);
     }
 
+    private function handleSections(Test $test, array $sectionData): void
+    {
+        // Remove existing sections
+        foreach ($test->getSections() as $section) {
+            $test->removeSection($section);
+        }
+
+        // Add new sections
+        foreach ($sectionData as $index => $sectionItem) {
+            $sectionRequest = TestSectionRequest::fromRequest($sectionItem);
+
+            $section = new TestSection();
+            $section->setName($sectionRequest->name)
+                   ->setDescription($sectionRequest->description)
+                   ->setOrderIndex($sectionRequest->orderIndex ?? $index)
+                   ->setTest($test);
+
+            $test->addSection($section);
+        }
+    }
+
     #[Route('', name: 'create', methods: ['POST'])]
     public function create(Request $request): JsonResponse
     {
@@ -51,6 +74,8 @@ class TestController extends AbstractController
         $test->setName($testRequest->name)
             ->setOwner($owner)
             ->setNotes($testRequest->notes);
+
+        $this->handleSections($test, $testRequest->sections);
 
         // Add categories if provided
         foreach ($testRequest->categoryIds as $categoryId) {
@@ -90,6 +115,8 @@ class TestController extends AbstractController
         $test->setName($testRequest->name)
             ->setOwner($owner)
             ->setNotes($testRequest->notes);
+
+        $this->handleSections($test, $testRequest->sections);
 
         // Clear and re-add categories
         foreach ($test->getCategories() as $category) {

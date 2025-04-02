@@ -4,7 +4,7 @@ namespace App\Dto;
 
 use Symfony\Component\Validator\Constraints as Assert;
 
-class TestRequest
+class TestSectionRequest
 {
     #[Assert\NotBlank(message: 'Name is required')]
     #[Assert\Length(
@@ -15,22 +15,17 @@ class TestRequest
     )]
     public string $name;
 
-    #[Assert\Type('string')]
-    public ?string $notes = null;
+    public ?string $description = null;
 
-    #[Assert\Type('array')]
-    public array $categoryIds = [];
-
-    #[Assert\Type('array')]
-    public array $sections = [];
+    #[Assert\GreaterThanOrEqual(0)]
+    public int $orderIndex = 0;
 
     public static function fromRequest(array $data): self
     {
         $dto = new self();
         $dto->name = $data['name'] ?? null;
-        $dto->notes = $data['notes'] ?? null;
-        $dto->categoryIds = $data['categoryIds'] ?? [];
-        $dto->sections = $data['sections'] ?? [];
+        $dto->description = $data['description'] ?? null;
+        $dto->orderIndex = $data['orderIndex'] ?? 0;
         return $dto;
     }
 }

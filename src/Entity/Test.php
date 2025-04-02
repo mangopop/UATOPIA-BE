@@ -39,10 +39,21 @@ class Test
     #[ORM\ManyToMany(targetEntity: Template::class, mappedBy: 'tests')]
     private Collection $templates;
 
+    #[ORM\OneToMany(
+        mappedBy: 'test',
+        targetEntity: TestSection::class,
+        orphanRemoval: true,
+        cascade: ['persist']
+    )]
+    #[ORM\OrderBy(['orderIndex' => 'ASC'])]
+    #[Groups([self::GROUP_READ, Template::GROUP_READ, Story::GROUP_READ])]
+    private Collection $sections;
+
     public function __construct()
     {
         $this->categories = new ArrayCollection();
         $this->templates = new ArrayCollection();
+        $this->sections = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -124,4 +135,30 @@ class Test
         return $this;
     }
 
+    /**
+     * @return Collection<int, TestSection>
+     */
+    public function getSections(): Collection
+    {
+        return $this->sections;
+    }
+
+    public function addSection(TestSection $section): self
+    {
+        if (!$this->sections->contains($section)) {
+            $this->sections->add($section);
+            $section->setTest($this);
+        }
+        return $this;
+    }
+
+    public function removeSection(TestSection $section): self
+    {
+        if ($this->sections->removeElement($section)) {
+            if ($section->getTest() === $this) {
+                $section->setTest(null);
+            }
+        }
+        return $this;
+    }
 }
