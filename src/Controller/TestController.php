@@ -27,10 +27,20 @@ class TestController extends AbstractController
     ) {}
 
     #[Route('', name: 'index', methods: ['GET'])]
-    public function index(): JsonResponse
+    public function index(Request $request): JsonResponse
     {
-        $tests = $this->testRepository->findAllSorted();
-        return $this->json($tests, 200, [], ['groups' => [Test::GROUP_READ]]);
+        $page = max(1, $request->query->getInt('page', 1));
+        $limit = 10;
+
+        $result = $this->testRepository->findAllSortedPaginated($page, $limit);
+
+        return $this->json([
+            'data' => $result['data'],
+            'total' => $result['total'],
+            'page' => $page,
+            'limit' => $limit,
+            'totalPages' => ceil($result['total'] / $limit)
+        ], 200, [], ['groups' => [Test::GROUP_READ]]);
     }
 
     private function handleSections(Test $test, array $sectionData): void
@@ -89,6 +99,30 @@ class TestController extends AbstractController
         $this->entityManager->flush();
 
         return $this->json($test, 201, [], ['groups' => [Test::GROUP_READ]]);
+    }
+
+    #[Route('/search', name: 'search', methods: ['GET'], priority: 1)]
+    public function search(Request $request): JsonResponse
+    {
+        $query = $request->query->get('q');
+        $categoryIds = $request->query->all('categories');
+        $page = max(1, $request->query->getInt('page', 1));
+        $limit = 30;
+
+        $result = $this->testRepository->searchTests(
+            query: $query,
+            categoryIds: $categoryIds,
+            page: $page,
+            limit: $limit
+        );
+
+        return $this->json([
+            'data' => $result['data'],
+            'total' => $result['total'],
+            'page' => $page,
+            'limit' => $limit,
+            'totalPages' => ceil($result['total'] / $limit)
+        ], 200, [], ['groups' => [Test::GROUP_READ]]);
     }
 
     #[Route('/{id}', name: 'show', methods: ['GET'])]

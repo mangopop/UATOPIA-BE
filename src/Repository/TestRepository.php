@@ -64,4 +64,77 @@ class TestRepository extends ServiceEntityRepository
             ->getQuery()
             ->getResult();
     }
+
+    /**
+     * @return array{data: Test[], total: int}
+     */
+    public function findAllSortedPaginated(int $page = 1, int $limit = 30): array
+    {
+        $queryBuilder = $this->createQueryBuilder('t')
+            ->orderBy('t.name', 'ASC');
+
+        // Get total count
+        $countQuery = clone $queryBuilder;
+        $total = $countQuery->select('COUNT(t.id)')
+            ->getQuery()
+            ->getSingleScalarResult();
+
+        // Get paginated results
+        $query = $queryBuilder
+            ->setFirstResult(($page - 1) * $limit)
+            ->setMaxResults($limit)
+            ->getQuery();
+
+        return [
+            'data' => $query->getResult(),
+            'total' => $total
+        ];
+    }
+
+    /**
+     * @return array{data: Test[], total: int}
+     */
+    public function searchTests(
+        ?string $query = null,
+        ?array $categoryIds = null,
+        int $page = 1,
+        int $limit = 30
+    ): array {
+        $queryBuilder = $this->createQueryBuilder('t')
+            ->leftJoin('t.categories', 'c')
+            ->leftJoin('t.owner', 'o')
+            ->addSelect('c')
+            ->addSelect('o');
+
+        if ($query) {
+            $queryBuilder
+                ->andWhere('t.name LIKE :query')
+                ->setParameter('query', '%' . $query . '%');
+        }
+
+        if ($categoryIds) {
+            $queryBuilder
+                ->andWhere('c.id IN (:categoryIds)')
+                ->setParameter('categoryIds', $categoryIds);
+        }
+
+        $queryBuilder->orderBy('t.name', 'ASC');
+
+        // Get total count
+        $countQuery = clone $queryBuilder;
+        $total = $countQuery->select('COUNT(DISTINCT t.id)')
+            ->getQuery()
+            ->getSingleScalarResult();
+
+        // Get paginated results
+        $query = $queryBuilder
+            ->setFirstResult(($page - 1) * $limit)
+            ->setMaxResults($limit)
+            ->getQuery();
+
+        return [
+            'data' => $query->getResult(),
+            'total' => $total
+        ];
+    }
 }
