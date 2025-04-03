@@ -154,7 +154,8 @@ class StoryController extends AbstractController
             $result->setTest($test)
                   ->setStory($story)
                   ->setStatus($testResultRequest->status)
-                  ->setNotes($testResultRequest->notes);
+                  ->setNotes($testResultRequest->notes)
+                  ->setCodeNotes($testResultRequest->codeNotes);
 
             $this->entityManager->persist($result);
         }

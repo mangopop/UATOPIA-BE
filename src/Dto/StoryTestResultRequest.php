@@ -20,6 +20,8 @@ class StoryTestResultRequest
 
     public ?string $notes = null;
 
+    public ?string $codeNotes = null;
+
     public static function fromRequest(array $data): self
     {
         $dto = new self();

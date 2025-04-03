@@ -35,6 +35,10 @@ class StoryTestResult
     #[Groups([Story::GROUP_READ])]
     private ?string $notes = null;
 
+    #[ORM\Column(type: 'text', nullable: true)]
+    #[Groups([Story::GROUP_READ])]
+    private ?string $codeNotes = null;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -84,6 +88,17 @@ class StoryTestResult
     public function setNotes(?string $notes): self
     {
         $this->notes = $notes;
+        return $this;
+    }
+
+    public function getCodeNotes(): ?string
+    {
+        return $this->codeNotes;
+    }
+
+    public function setCodeNotes(?string $codeNotes): self
+    {
+        $this->codeNotes = $codeNotes;
         return $this;
     }
 }

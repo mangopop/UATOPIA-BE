@@ -35,10 +35,15 @@ class Template
     #[Groups([self::GROUP_READ])]
     private Collection $stories;
 
+    #[ORM\Column(type: 'datetime_immutable', options: ['default' => 'CURRENT_TIMESTAMP'])]
+    #[Groups([self::GROUP_READ, Template::GROUP_READ, Story::GROUP_READ])]
+    private ?\DateTimeImmutable $createdAt;
+
     public function __construct()
     {
         $this->tests = new ArrayCollection();
         $this->stories = new ArrayCollection();
+        $this->createdAt = new \DateTimeImmutable();
     }
 
     public function getId(): ?int
@@ -109,6 +114,17 @@ class Template
         if ($this->stories->removeElement($story)) {
             $story->removeTemplate($this);
         }
+        return $this;
+    }
+
+    public function getCreatedAt(): ?\DateTimeImmutable
+    {
+        return $this->createdAt;
+    }
+
+    public function setCreatedAt(\DateTimeImmutable $createdAt): self
+    {
+        $this->createdAt = $createdAt;
         return $this;
     }
 }

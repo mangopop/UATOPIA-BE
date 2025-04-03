@@ -71,7 +71,7 @@ class TestRepository extends ServiceEntityRepository
     public function findAllSortedPaginated(int $page = 1, int $limit = 30): array
     {
         $queryBuilder = $this->createQueryBuilder('t')
-            ->orderBy('t.name', 'ASC');
+            ->orderBy('t.createdAt', 'DESC');
 
         // Get total count
         $countQuery = clone $queryBuilder;

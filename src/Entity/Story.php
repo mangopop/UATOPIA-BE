@@ -44,10 +44,15 @@ class Story
     #[Groups([self::GROUP_READ])]
     private Collection $testResults;
 
+    #[ORM\Column(type: 'datetime_immutable', options: ['default' => 'CURRENT_TIMESTAMP'])]
+    #[Groups([self::GROUP_READ, Template::GROUP_READ, Story::GROUP_READ])]
+    private ?\DateTimeImmutable $createdAt;
+
     public function __construct()
     {
         $this->templates = new ArrayCollection();
         $this->testResults = new ArrayCollection();
+        $this->createdAt = new \DateTimeImmutable();
     }
 
     public function getId(): ?int
@@ -152,6 +157,18 @@ class Story
         $result->setPassed($passed)
               ->setNotes($notes);
 
+        return $this;
+    }
+
+
+    public function getCreatedAt(): ?\DateTimeImmutable
+    {
+        return $this->createdAt;
+    }
+
+    public function setCreatedAt(\DateTimeImmutable $createdAt): self
+    {
+        $this->createdAt = $createdAt;
         return $this;
     }
 }
