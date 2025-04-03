@@ -98,10 +98,11 @@ class StoryTestResult
         return $this->notes;
     }
 
-    public function addNote(string $noteText): self
+    public function addNote(string $noteText, User $user): self
     {
         $note = new StoryTestResultNote();
         $note->setNote($noteText)
+            ->setCreatedBy($user)
             ->setTestResult($this);
 
         $this->notes->add($note);
