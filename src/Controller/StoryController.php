@@ -145,17 +145,23 @@ class StoryController extends AbstractController
 
         if ($existingResult) {
             // Update existing result
-            $existingResult
-                ->setStatus($testResultRequest->status)
-                ->setNotes($testResultRequest->notes);
+            $existingResult->setStatus($testResultRequest->status);
+
+            // Add new note if provided
+            if ($testResultRequest->notes) {
+                $existingResult->addNote($testResultRequest->notes);
+            }
         } else {
             // Create new result
             $result = new StoryTestResult();
             $result->setTest($test)
                   ->setStory($story)
-                  ->setStatus($testResultRequest->status)
-                  ->setNotes($testResultRequest->notes)
-                  ->setCodeNotes($testResultRequest->codeNotes);
+                  ->setStatus($testResultRequest->status);
+
+            // Add initial note if provided
+            if ($testResultRequest->notes) {
+                $result->addNote($testResultRequest->notes);
+            }
 
             $this->entityManager->persist($result);
         }

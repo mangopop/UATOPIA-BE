@@ -4,6 +4,8 @@ namespace App\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Serializer\Annotation\Groups;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 
 #[ORM\Entity]
 class StoryTestResult
@@ -31,13 +33,21 @@ class StoryTestResult
     #[Groups([Story::GROUP_READ])]
     private string $status = self::STATUS_NOT_TESTED;
 
-    #[ORM\Column(type: 'text', nullable: true)]
-    #[Groups([Story::GROUP_READ])]
-    private ?string $notes = null;
+    #[ORM\OneToMany(
+        mappedBy: 'testResult',
+        targetEntity: StoryTestResultNote::class,
+        orphanRemoval: true,
+        cascade: ['persist']
+    )]
 
-    #[ORM\Column(type: 'text', nullable: true)]
+    #[ORM\OrderBy(['createdAt' => 'DESC'])]
     #[Groups([Story::GROUP_READ])]
-    private ?string $codeNotes = null;
+    private Collection $notes;
+
+    public function __construct()
+    {
+        $this->notes = new ArrayCollection();
+    }
 
     public function getId(): ?int
     {
@@ -80,25 +90,21 @@ class StoryTestResult
         return $this;
     }
 
-    public function getNotes(): ?string
+    /**
+     * @return Collection<int, StoryTestResultNote>
+     */
+    public function getNotes(): Collection
     {
         return $this->notes;
     }
 
-    public function setNotes(?string $notes): self
+    public function addNote(string $noteText): self
     {
-        $this->notes = $notes;
-        return $this;
-    }
+        $note = new StoryTestResultNote();
+        $note->setNote($noteText)
+            ->setTestResult($this);
 
-    public function getCodeNotes(): ?string
-    {
-        return $this->codeNotes;
-    }
-
-    public function setCodeNotes(?string $codeNotes): self
-    {
-        $this->codeNotes = $codeNotes;
+        $this->notes->add($note);
         return $this;
     }
 }
