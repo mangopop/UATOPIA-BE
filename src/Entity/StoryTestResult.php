@@ -29,7 +29,7 @@ class StoryTestResult
     #[Groups([Story::GROUP_READ])]
     private ?Test $test = null;
 
-    #[ORM\Column(length: 20)]
+    #[ORM\Column(length: 20, options: ['default' => self::STATUS_NOT_TESTED])]
     #[Groups([Story::GROUP_READ])]
     private string $status = self::STATUS_NOT_TESTED;
 
