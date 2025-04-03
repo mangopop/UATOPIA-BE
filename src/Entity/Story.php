@@ -144,6 +144,7 @@ class Story
         return null;
     }
 
+    // TODO not used?
     public function setTestResult(Test $test, bool $passed, ?string $notes = null): self
     {
         $result = $this->getTestResult($test);

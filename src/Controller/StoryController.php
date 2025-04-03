@@ -136,6 +136,11 @@ class StoryController extends AbstractController
             return $this->json(['errors' => ['Test not found']], 404);
         }
 
+        $currentUser = $this->getUser();
+        if (!$currentUser) {
+            return $this->json(['errors' => ['User not authenticated']], 401);
+        }
+
         // Find existing test result
         $existingResult = $this->entityManager->getRepository(StoryTestResult::class)
             ->findOneBy([
@@ -145,17 +150,23 @@ class StoryController extends AbstractController
 
         if ($existingResult) {
             // Update existing result
-            $existingResult
-                ->setStatus($testResultRequest->status)
-                ->setNotes($testResultRequest->notes);
+            $existingResult->setStatus($testResultRequest->status);
+
+            // Add new note if provided
+            if ($testResultRequest->notes) {
+                $existingResult->addNote($testResultRequest->notes, $currentUser);
+            }
         } else {
             // Create new result
             $result = new StoryTestResult();
             $result->setTest($test)
                   ->setStory($story)
-                  ->setStatus($testResultRequest->status)
-                  ->setNotes($testResultRequest->notes)
-                  ->setCodeNotes($testResultRequest->codeNotes);
+                  ->setStatus($testResultRequest->status);
+
+            // Add initial note if provided
+            if ($testResultRequest->notes) {
+                $result->addNote($testResultRequest->notes, $currentUser);
+            }
 
             $this->entityManager->persist($result);
         }
