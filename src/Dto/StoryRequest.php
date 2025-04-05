@@ -18,11 +18,19 @@ class StoryRequest
     #[Assert\Type('array')]
     public array $templateIds = [];
 
+    #[Assert\Type('array')]
+    public array $testIds = [];
+
+    #[Assert\Type('array')]
+    public array $categoryIds = [];
+
     public static function fromRequest(array $data): self
     {
         $dto = new self();
         $dto->name = $data['name'] ?? null;
         $dto->templateIds = $data['templateIds'] ?? [];
+        $dto->testIds = $data['testIds'] ?? [];
+        $dto->categoryIds = $data['categoryIds'] ?? [];
         return $dto;
     }
 }

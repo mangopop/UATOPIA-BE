@@ -53,6 +53,10 @@ class Story
     #[Groups([self::GROUP_READ])]
     private Collection $sectionResults;
 
+    #[ORM\ManyToMany(targetEntity: Category::class, inversedBy: 'stories')]
+    #[Groups([self::GROUP_READ])]
+    private Collection $categories;
+
     #[ORM\Column(type: 'datetime_immutable', options: ['default' => 'CURRENT_TIMESTAMP'])]
     #[Groups([self::GROUP_READ, Template::GROUP_READ, Story::GROUP_READ])]
     private ?\DateTimeImmutable $createdAt;
@@ -62,6 +66,7 @@ class Story
         $this->templates = new ArrayCollection();
         $this->testResults = new ArrayCollection();
         $this->sectionResults = new ArrayCollection();
+        $this->categories = new ArrayCollection();
         $this->createdAt = new \DateTimeImmutable();
     }
 
@@ -250,6 +255,25 @@ class Story
         }
 
         $sectionResult->addNote($noteText, $user);
+        return $this;
+    }
+
+    public function getCategories(): Collection
+    {
+        return $this->categories;
+    }
+
+    public function addCategory(Category $category): self
+    {
+        if (!$this->categories->contains($category)) {
+            $this->categories->add($category);
+        }
+        return $this;
+    }
+
+    public function removeCategory(Category $category): self
+    {
+        $this->categories->removeElement($category);
         return $this;
     }
 }

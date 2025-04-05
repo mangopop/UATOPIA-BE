@@ -15,6 +15,7 @@ use Symfony\Component\Routing\Annotation\Route;
 use App\Repository\TestRepository;
 use App\Dto\StoryTestResultRequest;
 use App\Entity\StoryTestResult;
+use App\Repository\CategoryRepository;
 
 #[Route('/api/stories', name: 'api_stories_')]
 class StoryController extends AbstractController
@@ -22,6 +23,8 @@ class StoryController extends AbstractController
     public function __construct(
         private readonly StoryRepository $storyRepository,
         private readonly TemplateRepository $templateRepository,
+        private readonly TestRepository $testRepository,
+        private readonly CategoryRepository $categoryRepository,
         private readonly ValidationService $validationService,
         private readonly EntityManagerInterface $entityManager
     ) {}
@@ -46,18 +49,36 @@ class StoryController extends AbstractController
         }
 
         $owner = $this->getUser();
+
         if (!$owner) {
-            return $this->json(['errors' => ['Authentication required']], 401);
+            return $this->json(['errors' => ['User not authenticated']], 401);
         }
 
         $story = new Story();
         $story->setName($storyRequest->name)
             ->setOwner($owner);
 
+        // Add templates if provided
         foreach ($storyRequest->templateIds as $templateId) {
             $template = $this->templateRepository->find($templateId);
             if ($template) {
                 $story->addTemplate($template);
+            }
+        }
+
+        // Add tests if provided
+        // foreach ($storyRequest->testIds as $testId) {
+        //     $test = $this->testRepository->find($testId);
+        //     if ($test) {
+        //         $story->addTest($test);
+        //     }
+        // }
+
+        // Add categories if provided
+        foreach ($storyRequest->categoryIds as $categoryId) {
+            $category = $this->categoryRepository->find($categoryId);
+            if ($category) {
+                $story->addCategory($category);
             }
         }
 
@@ -85,7 +106,7 @@ class StoryController extends AbstractController
 
         $owner = $this->getUser();
         if (!$owner) {
-            return $this->json(['errors' => ['Authentication required']], 401);
+            return $this->json(['errors' => ['User not authenticated']], 401);
         }
 
         $story->setName($storyRequest->name)
@@ -95,11 +116,32 @@ class StoryController extends AbstractController
         foreach ($story->getTemplates() as $template) {
             $story->removeTemplate($template);
         }
-
         foreach ($storyRequest->templateIds as $templateId) {
             $template = $this->templateRepository->find($templateId);
             if ($template) {
                 $story->addTemplate($template);
+            }
+        }
+
+        // Clear and re-add tests
+        // foreach ($story->getTests() as $test) {
+        //     $story->removeTest($test);
+        // }
+        // foreach ($storyRequest->testIds as $testId) {
+        //     $test = $this->testRepository->find($testId);
+        //     if ($test) {
+        //         $story->addTest($test);
+        //     }
+        // }
+
+        // Clear and re-add categories
+        foreach ($story->getCategories() as $category) {
+            $story->removeCategory($category);
+        }
+        foreach ($storyRequest->categoryIds as $categoryId) {
+            $category = $this->categoryRepository->find($categoryId);
+            if ($category) {
+                $story->addCategory($category);
             }
         }
 
