@@ -4,11 +4,11 @@ namespace App\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Serializer\Annotation\Groups;
-use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
+use Doctrine\Common\Collections\ArrayCollection;
 
 #[ORM\Entity]
-class StoryTestResult
+class StoryTestSectionResult
 {
     public const STATUS_NOT_TESTED = 'not_tested';
     public const STATUS_PASSED = 'passed';
@@ -20,34 +20,37 @@ class StoryTestResult
     #[Groups([Story::GROUP_READ])]
     private ?int $id = null;
 
-    #[ORM\ManyToOne(inversedBy: 'testResults')]
+    #[ORM\ManyToOne(inversedBy: 'sectionResults')]
     #[ORM\JoinColumn(nullable: false)]
     private ?Story $story = null;
 
     #[ORM\ManyToOne]
     #[ORM\JoinColumn(nullable: false)]
     #[Groups([Story::GROUP_READ])]
-    private ?Test $test = null;
+    private ?TestSection $section = null;
 
     #[ORM\Column(length: 20, options: ['default' => self::STATUS_NOT_TESTED])]
     #[Groups([Story::GROUP_READ])]
     private string $status = self::STATUS_NOT_TESTED;
 
     #[ORM\OneToMany(
-        mappedBy: 'testResult',
-        targetEntity: StoryTestResultNote::class,
+        mappedBy: 'sectionResult',
+        targetEntity: StoryTestSectionResultNote::class,
         orphanRemoval: true,
         cascade: ['persist']
     )]
-
     #[ORM\OrderBy(['createdAt' => 'DESC'])]
     #[Groups([Story::GROUP_READ])]
     private Collection $notes;
 
+    #[ORM\Column(type: 'datetime_immutable')]
+    #[Groups([Story::GROUP_READ])]
+    private \DateTimeImmutable $updatedAt;
+
     public function __construct()
     {
         $this->notes = new ArrayCollection();
-        $this->sectionResults = new ArrayCollection();
+        $this->updatedAt = new \DateTimeImmutable();
     }
 
     public function getId(): ?int
@@ -66,14 +69,14 @@ class StoryTestResult
         return $this;
     }
 
-    public function getTest(): ?Test
+    public function getSection(): ?TestSection
     {
-        return $this->test;
+        return $this->section;
     }
 
-    public function setTest(?Test $test): self
+    public function setSection(?TestSection $section): self
     {
-        $this->test = $test;
+        $this->section = $section;
         return $this;
     }
 
@@ -88,11 +91,12 @@ class StoryTestResult
             throw new \InvalidArgumentException('Invalid status');
         }
         $this->status = $status;
+        $this->updatedAt = new \DateTimeImmutable();
         return $this;
     }
 
     /**
-     * @return Collection<int, StoryTestResultNote>
+     * @return Collection<int, StoryTestSectionResultNote>
      */
     public function getNotes(): Collection
     {
@@ -101,12 +105,19 @@ class StoryTestResult
 
     public function addNote(string $noteText, User $user): self
     {
-        $note = new StoryTestResultNote();
+        $note = new StoryTestSectionResultNote();
         $note->setNote($noteText)
             ->setCreatedBy($user)
-            ->setTestResult($this);
+            ->setSectionResult($this);
 
         $this->notes->add($note);
+        $this->updatedAt = new \DateTimeImmutable();
+
         return $this;
+    }
+
+    public function getUpdatedAt(): \DateTimeImmutable
+    {
+        return $this->updatedAt;
     }
 }

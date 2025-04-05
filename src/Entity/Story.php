@@ -44,6 +44,15 @@ class Story
     #[Groups([self::GROUP_READ])]
     private Collection $testResults;
 
+    #[ORM\OneToMany(
+        mappedBy: 'story',
+        targetEntity: StoryTestSectionResult::class,
+        orphanRemoval: true,
+        cascade: ['persist']
+    )]
+    #[Groups([self::GROUP_READ])]
+    private Collection $sectionResults;
+
     #[ORM\Column(type: 'datetime_immutable', options: ['default' => 'CURRENT_TIMESTAMP'])]
     #[Groups([self::GROUP_READ, Template::GROUP_READ, Story::GROUP_READ])]
     private ?\DateTimeImmutable $createdAt;
@@ -52,6 +61,7 @@ class Story
     {
         $this->templates = new ArrayCollection();
         $this->testResults = new ArrayCollection();
+        $this->sectionResults = new ArrayCollection();
         $this->createdAt = new \DateTimeImmutable();
     }
 
@@ -144,23 +154,82 @@ class Story
         return null;
     }
 
-    // TODO not used?
-    public function setTestResult(Test $test, bool $passed, ?string $notes = null): self
+    /**
+     * @return Collection<int, StoryTestSectionResult>
+     */
+    public function getSectionResults(): Collection
     {
-        $result = $this->getTestResult($test);
-        if (!$result) {
-            $result = new StoryTestResult();
-            $result->setStory($this)
-                  ->setTest($test);
-            $this->testResults->add($result);
-        }
-
-        $result->setPassed($passed)
-              ->setNotes($notes);
-
-        return $this;
+        return $this->sectionResults;
     }
 
+    public function getSectionResult(TestSection $section): ?StoryTestSectionResult
+    {
+        foreach ($this->sectionResults as $result) {
+            if ($result->getSection() === $section) {
+                return $result;
+            }
+        }
+        return null;
+    }
+
+    public function setSectionResult(TestSection $section, string $status): StoryTestSectionResult
+    {
+        $sectionResult = $this->getSectionResult($section);
+        if (!$sectionResult) {
+            $sectionResult = new StoryTestSectionResult();
+            $sectionResult->setStory($this)
+                         ->setSection($section);
+            $this->sectionResults->add($sectionResult);
+        }
+
+        $sectionResult->setStatus($status);
+
+        // Update the overall test status for the test that owns this section
+        $this->updateTestStatus($section->getTest());
+
+        return $sectionResult;
+    }
+
+    private function updateTestStatus(Test $test): void
+    {
+        $testResult = $this->getTestResult($test);
+        if (!$testResult) {
+            $testResult = new StoryTestResult();
+            $testResult->setStory($this)
+                      ->setTest($test);
+            $this->testResults->add($testResult);
+        }
+
+        $allPassed = true;
+        $anyTested = false;
+        $anyFailed = false;
+
+        foreach ($this->sectionResults as $sectionResult) {
+            if ($sectionResult->getSection()->getTest() !== $test) {
+                continue;
+            }
+
+            if ($sectionResult->getStatus() !== StoryTestSectionResult::STATUS_NOT_TESTED) {
+                $anyTested = true;
+            }
+            if ($sectionResult->getStatus() === StoryTestSectionResult::STATUS_FAILED) {
+                $anyFailed = true;
+            }
+            if ($sectionResult->getStatus() !== StoryTestSectionResult::STATUS_PASSED) {
+                $allPassed = false;
+            }
+        }
+
+        if ($anyFailed) {
+            $testResult->setStatus(StoryTestResult::STATUS_FAILED);
+        } else if (!$anyTested) {
+            $testResult->setStatus(StoryTestResult::STATUS_NOT_TESTED);
+        } else if ($allPassed) {
+            $testResult->setStatus(StoryTestResult::STATUS_PASSED);
+        } else {
+            $testResult->setStatus(StoryTestResult::STATUS_NOT_TESTED);
+        }
+    }
 
     public function getCreatedAt(): ?\DateTimeImmutable
     {
@@ -170,6 +239,17 @@ class Story
     public function setCreatedAt(\DateTimeImmutable $createdAt): self
     {
         $this->createdAt = $createdAt;
+        return $this;
+    }
+
+    public function addSectionResultNote(TestSection $section, string $noteText, User $user): self
+    {
+        $sectionResult = $this->getSectionResult($section);
+        if (!$sectionResult) {
+            $sectionResult = $this->setSectionResult($section, StoryTestSectionResult::STATUS_NOT_TESTED);
+        }
+
+        $sectionResult->addNote($noteText, $user);
         return $this;
     }
 }
