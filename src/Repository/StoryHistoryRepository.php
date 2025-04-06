@@ -15,8 +15,7 @@ class StoryHistoryRepository extends ServiceEntityRepository
     }
 
     /**
-     * Find all history entries for a story, grouped by timestamp
-     * Returns the entries ordered by most recent first
+     * Find all history entries for a story, each entry as its own group
      */
     public function findStoryHistory(Story $story): array
     {
@@ -30,7 +29,50 @@ class StoryHistoryRepository extends ServiceEntityRepository
             ->getQuery()
             ->getResult();
 
-        return $this->groupEntriesByTimestamp($entries);
+        $historyGroups = [];
+
+        foreach ($entries as $entry) {
+            $timestamp = $entry->getCreatedAt()->format('Y-m-d H:i:s');
+
+            $historyEntry = [
+                'timestamp' => $timestamp,
+                'status' => $entry->getStatus(),
+                'created_by' => [
+                    'id' => $entry->getCreatedBy()->getId(),
+                    'firstName' => $entry->getCreatedBy()->getFirstName()
+                ],
+                'tests' => []
+            ];
+
+            // Add test data
+            $testData = [
+                'id' => $entry->getTest()->getId(),
+                'name' => $entry->getTest()->getName(),
+                'status' => $entry->getTestStatus(),
+                'notes' => $entry->getNotes() ? explode("\n", $entry->getNotes()) : [],
+                'sections' => []
+            ];
+
+            // Add section results
+            foreach ($entry->getSectionResults() as $section) {
+                $sectionData = [
+                    'id' => $section['id'],
+                    'name' => $section['name'],
+                    'status' => $section['status']
+                ];
+                $testData['sections'][] = $sectionData;
+            }
+
+            // Add section notes if they exist
+            if ($entry->getSectionNotes()) {
+                $testData['section_notes'] = explode("\n", $entry->getSectionNotes());
+            }
+
+            $historyEntry['tests'][] = $testData;
+            $historyGroups[] = $historyEntry;
+        }
+
+        return $historyGroups;
     }
 
     /**

@@ -6,6 +6,7 @@ use App\Entity\Story;
 use App\Entity\StoryHistory;
 use App\Entity\StoryTestResult;
 use App\Repository\StoryRepository;
+use App\Repository\StoryHistoryRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -18,6 +19,7 @@ class StoryHistoryController extends AbstractController
 {
     public function __construct(
         private readonly StoryRepository $storyRepository,
+        private readonly StoryHistoryRepository $storyHistoryRepository,
         private readonly EntityManagerInterface $entityManager
     ) {
     }
@@ -143,74 +145,13 @@ class StoryHistoryController extends AbstractController
     #[IsGranted('ROLE_USER')]
     public function getHistory(Story $story): JsonResponse
     {
-        $history = $this->entityManager->getRepository(StoryHistory::class)
-            ->findBy(
-                ['story' => $story],
-                ['createdAt' => 'DESC']
-            );
 
-        $historyData = [];
-        $currentTimestamp = null;
-        $currentEntry = null;
-
-        foreach ($history as $entry) {
-            $timestamp = $entry->getCreatedAt()->format('Y-m-d H:i:s');
-
-            // If this is a new timestamp, create a new entry
-            if ($timestamp !== $currentTimestamp) {
-                // Add the previous entry to the array if it exists
-                if ($currentEntry !== null) {
-                    $historyData[] = $currentEntry;
-                }
-
-                $currentTimestamp = $timestamp;
-                $currentEntry = [
-                    'timestamp' => $timestamp,
-                    'status' => $entry->getStatus(),
-                    'created_by' => [
-                        'id' => $entry->getCreatedBy()->getId(),
-                        'username' => $entry->getCreatedBy()->getFirstName()
-                    ],
-                    'tests' => []
-                ];
-            }
-
-            // Add test data to the current entry
-            $testData = [
-                'id' => $entry->getTest()->getId(),
-                'name' => $entry->getTest()->getName(),
-                'status' => $entry->getTestStatus(),
-                'notes' => $entry->getNotes() ? explode("\n", $entry->getNotes()) : [],
-                'sections' => []
-            ];
-
-            // Add section results
-            foreach ($entry->getSectionResults() as $section) {
-                $sectionData = [
-                    'id' => $section['id'],
-                    'name' => $section['name'],
-                    'status' => $section['status']
-                ];
-                $testData['sections'][] = $sectionData;
-            }
-
-            // Add section notes if they exist
-            if ($entry->getSectionNotes()) {
-                $testData['section_notes'] = explode("\n", $entry->getSectionNotes());
-            }
-
-            $currentEntry['tests'][] = $testData;
-        }
-
-        // Add the last entry if it exists
-        if ($currentEntry !== null) {
-            $historyData[] = $currentEntry;
-        }
+        $historyGroups = $this->storyHistoryRepository->findStoryHistory($story);
 
         return new JsonResponse([
             'story_id' => $story->getId(),
             'story_name' => $story->getName(),
-            'history' => $historyData
+            'history' => $historyGroups
         ]);
     }
 }
