@@ -61,6 +61,10 @@ class Story
     #[Groups([self::GROUP_READ, Template::GROUP_READ, Story::GROUP_READ])]
     private ?\DateTimeImmutable $createdAt;
 
+    #[ORM\Column(type: 'datetime_immutable', nullable: true)]
+    #[Groups([self::GROUP_READ])]
+    private ?\DateTimeImmutable $completedAt = null;
+
     public function __construct()
     {
         $this->templates = new ArrayCollection();
@@ -245,6 +249,22 @@ class Story
     {
         $this->createdAt = $createdAt;
         return $this;
+    }
+
+    public function getCompletedAt(): ?\DateTimeImmutable
+    {
+        return $this->completedAt;
+    }
+
+    public function setCompletedAt(?\DateTimeImmutable $completedAt): self
+    {
+        $this->completedAt = $completedAt;
+        return $this;
+    }
+
+    public function isCompleted(): bool
+    {
+        return $this->completedAt !== null;
     }
 
     public function addSectionResultNote(TestSection $section, string $noteText, User $user): self
