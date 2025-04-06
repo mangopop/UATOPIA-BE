@@ -169,7 +169,7 @@ class StoryHistoryController extends AbstractController
                     'status' => $entry->getStatus(),
                     'created_by' => [
                         'id' => $entry->getCreatedBy()->getId(),
-                        'username' => $entry->getCreatedBy()->getUsername()
+                        'username' => $entry->getCreatedBy()->getFirstName()
                     ],
                     'tests' => []
                 ];
@@ -187,8 +187,8 @@ class StoryHistoryController extends AbstractController
             // Add section results
             foreach ($entry->getSectionResults() as $section) {
                 $sectionData = [
-                    'id' => $section['section_id'],
-                    'name' => $section['section_name'],
+                    'id' => $section['id'],
+                    'name' => $section['name'],
                     'status' => $section['status']
                 ];
                 $testData['sections'][] = $sectionData;
