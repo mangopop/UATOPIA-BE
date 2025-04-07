@@ -56,33 +56,20 @@ class StoryHistoryController extends AbstractController
             }
 
             // Capture section results and notes
-            $sectionResults = [];
             $sectionNotes = [];
             foreach ($story->getSectionResults() as $sectionResult) {
                 if ($sectionResult->getSection()->getTest() === $testResult->getTest()) {
-                    $sectionResults[] = [
-                        'section_id' => $sectionResult->getSection()->getId(),
-                        'section_name' => $sectionResult->getSection()->getName(),
-                        'status' => $sectionResult->getStatus()
-                    ];
-
-                    // Capture section notes
-                    foreach ($sectionResult->getNotes() as $note) {
-                        $sectionNotes[] = sprintf(
-                            '[Section: %s] [%s] %s: %s',
-                            $sectionResult->getSection()->getName(),
-                            $note->getCreatedAt()->format('Y-m-d H:i:s'),
-                            $note->getCreatedBy()->getFirstName(),
-                            $note->getNote()
-                        );
-                    }
+                    $sectionNotes[] = sprintf(
+                        '[Section: %s] [%s] %s: %s',
+                        $sectionResult->getSection()->getName(),
+                        $note->getCreatedAt()->format('Y-m-d H:i:s'),
+                        $note->getCreatedBy()->getFirstName(),
+                        $note->getNote()
+                    );
                 }
             }
 
-            $history->setSectionResults($sectionResults);
-            if (!empty($sectionNotes)) {
-                $history->setSectionNotes(implode("\n", $sectionNotes));
-            }
+            $history->setSectionNotes(implode("\n", $sectionNotes));
 
             $this->entityManager->persist($history);
         }
@@ -110,7 +97,6 @@ class StoryHistoryController extends AbstractController
                 );
             }
 
-            // Create history entry for each test result
             $history = new StoryHistory();
             $history->setStory($story)
                 ->setStatus(StoryHistory::STATUS_COMPLETED)
@@ -118,18 +104,47 @@ class StoryHistoryController extends AbstractController
                 ->setTest($testResult->getTest())
                 ->setTestStatus($testResult->getStatus());
 
-            // Capture any notes from the test result
-            $notes = [];
+            // Capture test notes
+            $testNotes = [];
             foreach ($testResult->getNotes() as $note) {
-                $notes[] = sprintf(
+                $testNotes[] = sprintf(
                     '[%s] %s: %s',
                     $note->getCreatedAt()->format('Y-m-d H:i:s'),
                     $note->getCreatedBy()->getFirstName(),
                     $note->getNote()
                 );
             }
-            if (!empty($notes)) {
-                $history->setNotes(implode("\n", $notes));
+            if (!empty($testNotes)) {
+                $history->setNotes(implode("\n", $testNotes));
+            }
+
+            // Capture section results and notes
+            $sectionResults = [];
+            $sectionNotes = [];
+            foreach ($story->getSectionResults() as $sectionResult) {
+                if ($sectionResult->getSection()->getTest() === $testResult->getTest()) {
+                    $sectionResults[] = [
+                        'section_id' => $sectionResult->getSection()->getId(),
+                        'section_name' => $sectionResult->getSection()->getName(),
+                        'status' => $sectionResult->getStatus()
+                    ];
+
+                    // Capture section notes
+                    foreach ($sectionResult->getNotes() as $note) {
+                        $sectionNotes[] = sprintf(
+                            '[Section: %s] [%s] %s: %s',
+                            $sectionResult->getSection()->getName(),
+                            $note->getCreatedAt()->format('Y-m-d H:i:s'),
+                            $note->getCreatedBy()->getFirstName(),
+                            $note->getNote()
+                        );
+                    }
+                }
+            }
+
+            $history->setSectionResults($sectionResults);
+            if (!empty($sectionNotes)) {
+                $history->setSectionNotes(implode("\n", $sectionNotes));
             }
 
             $this->entityManager->persist($history);

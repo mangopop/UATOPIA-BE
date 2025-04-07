@@ -53,14 +53,18 @@ class StoryHistoryRepository extends ServiceEntityRepository
                 'sections' => []
             ];
 
-            // Add section results
-            foreach ($entry->getSectionResults() as $section) {
-                $sectionData = [
-                    'id' => $section['id'],
-                    'name' => $section['name'],
-                    'status' => $section['status']
-                ];
-                $testData['sections'][] = $sectionData;
+            // Add section results - using the correct keys that match what we saved
+            if ($entry->getSectionResults()) {
+                foreach ($entry->getSectionResults() as $section) {
+                    if (isset($section['section_id']) && isset($section['section_name']) && isset($section['status'])) {
+                        $sectionData = [
+                            'id' => $section['section_id'],
+                            'name' => $section['section_name'],
+                            'status' => $section['status']
+                        ];
+                        $testData['sections'][] = $sectionData;
+                    }
+                }
             }
 
             // Add section notes if they exist
