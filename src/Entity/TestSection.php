@@ -30,6 +30,10 @@ class TestSection
     #[Groups([Test::GROUP_READ, Template::GROUP_READ, Story::GROUP_READ])]
     private int $orderIndex = 0;
 
+    #[ORM\Column(type: 'boolean')]
+    #[Groups([Test::GROUP_READ, Template::GROUP_READ, Story::GROUP_READ])]
+    private bool $active = true;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -76,6 +80,17 @@ class TestSection
     public function setOrderIndex(int $orderIndex): self
     {
         $this->orderIndex = $orderIndex;
+        return $this;
+    }
+
+    public function isActive(): bool
+    {
+        return $this->active;
+    }
+
+    public function setActive(bool $active): self
+    {
+        $this->active = $active;
         return $this;
     }
 }

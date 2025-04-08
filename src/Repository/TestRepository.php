@@ -119,10 +119,10 @@ class TestRepository extends ServiceEntityRepository
                 ->setParameter('categoryIds', $categoryIds);
         }
 
-        if ($ownerId) {
+        if ($owner) {
             $queryBuilder
-                ->andWhere('o.id = :ownerId')
-                ->setParameter('ownerId', $ownerId);
+                ->andWhere('o.id = :owner')
+                ->setParameter('owner', $owner);
         }
 
         $queryBuilder->orderBy('t.name', 'ASC');

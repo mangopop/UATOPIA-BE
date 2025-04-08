@@ -45,22 +45,61 @@ class TestController extends AbstractController
 
     private function handleSections(Test $test, array $sectionData): void
     {
-        // Remove existing sections
-        foreach ($test->getSections() as $section) {
-            $test->removeSection($section);
-        }
+        $entityManager = $this->entityManager;
+        $existingSections = $test->getSections()->toArray();
+        $updatedSections = [];
+        $sectionIds = array_filter(array_map(fn($item) => $item['id'] ?? null, $sectionData));
 
-        // Add new sections
+        // First, handle updates and additions
         foreach ($sectionData as $index => $sectionItem) {
             $sectionRequest = TestSectionRequest::fromRequest($sectionItem);
 
-            $section = new TestSection();
+            // Try to find existing section to update
+            $section = null;
+            if (isset($sectionItem['id'])) {
+                foreach ($existingSections as $existingSection) {
+                    if ($existingSection->getId() === (int)$sectionItem['id']) {
+                        $section = $existingSection;
+                        break;
+                    }
+                }
+            }
+
+            // Create new section if not found
+            if (!$section) {
+                $section = new TestSection();
+                $test->addSection($section);
+            }
+
+            // Update section data
             $section->setName($sectionRequest->name)
                    ->setDescription($sectionRequest->description)
-                   ->setOrderIndex($sectionRequest->orderIndex ?? $index)
-                   ->setTest($test);
+                   ->setOrderIndex($sectionRequest->orderIndex ?? $index);
 
-            $test->addSection($section);
+            $updatedSections[] = $section;
+        }
+
+        // Handle removals - check for references before removing
+        foreach ($existingSections as $existingSection) {
+            if (!in_array($existingSection->getId(), $sectionIds)) {
+                // Check if section is referenced by any StoryTestSectionResult
+                $qb = $entityManager->createQueryBuilder();
+                $hasReferences = $qb->select('COUNT(stsr.id)')
+                    ->from('App\Entity\StoryTestSectionResult', 'stsr')
+                    ->where('stsr.section = :section')
+                    ->setParameter('section', $existingSection)
+                    ->getQuery()
+                    ->getSingleScalarResult();
+
+                if ($hasReferences > 0) {
+                    // If section is referenced, keep it but mark it as inactive or archived
+                    // You might need to add this field to your TestSection entity
+                    continue;
+                }
+
+                $test->removeSection($existingSection);
+                $entityManager->remove($existingSection);
+            }
         }
     }
 
