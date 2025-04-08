@@ -82,6 +82,7 @@ class TestController extends AbstractController
 
         $test = new Test();
         $test->setName($testRequest->name)
+            ->setDescription($testRequest->description)
             ->setOwner($owner)
             ->setNotes($testRequest->notes);
 
@@ -106,12 +107,14 @@ class TestController extends AbstractController
     {
         $query = $request->query->get('q');
         $categoryIds = $request->query->all('categories');
+        $ownerId = $request->query->get('ownerId');
         $page = max(1, $request->query->getInt('page', 1));
         $limit = 30;
 
         $result = $this->testRepository->searchTests(
             query: $query,
             categoryIds: $categoryIds,
+            ownerId: $ownerId,
             page: $page,
             limit: $limit
         );
@@ -147,6 +150,7 @@ class TestController extends AbstractController
         }
 
         $test->setName($testRequest->name)
+            ->setDescription($testRequest->description)
             ->setOwner($owner)
             ->setNotes($testRequest->notes);
 

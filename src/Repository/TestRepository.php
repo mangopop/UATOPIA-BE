@@ -97,6 +97,7 @@ class TestRepository extends ServiceEntityRepository
     public function searchTests(
         ?string $query = null,
         ?array $categoryIds = null,
+        ?int $ownerId = null,
         int $page = 1,
         int $limit = 30
     ): array {
@@ -116,6 +117,12 @@ class TestRepository extends ServiceEntityRepository
             $queryBuilder
                 ->andWhere('c.id IN (:categoryIds)')
                 ->setParameter('categoryIds', $categoryIds);
+        }
+
+        if ($ownerId) {
+            $queryBuilder
+                ->andWhere('o.id = :ownerId')
+                ->setParameter('ownerId', $ownerId);
         }
 
         $queryBuilder->orderBy('t.name', 'ASC');

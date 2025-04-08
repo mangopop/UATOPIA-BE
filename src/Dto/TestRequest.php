@@ -15,6 +15,12 @@ class TestRequest
     )]
     public string $name;
 
+    #[Assert\Length(
+        max: 255,
+        maxMessage: 'Description cannot be longer than {{ limit }} characters'
+    )]
+    public ?string $description = null;
+
     #[Assert\Type('string')]
     public ?string $notes = null;
 
@@ -28,6 +34,7 @@ class TestRequest
     {
         $dto = new self();
         $dto->name = $data['name'] ?? null;
+        $dto->description = $data['description'] ?? null;
         $dto->notes = $data['notes'] ?? null;
         $dto->categoryIds = $data['categoryIds'] ?? [];
         $dto->sections = $data['sections'] ?? [];

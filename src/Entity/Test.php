@@ -23,6 +23,10 @@ class Test
     #[Groups([self::GROUP_READ, Template::GROUP_READ, Story::GROUP_READ])]
     private ?string $name = null;
 
+    #[ORM\Column(length: 255)]
+    #[Groups([self::GROUP_READ, Template::GROUP_READ, Story::GROUP_READ])]
+    private ?string $description = null;
+
     #[ORM\ManyToOne(inversedBy: 'tests')]
     #[ORM\JoinColumn(nullable: false)]
     #[Groups([self::GROUP_READ, Template::GROUP_READ, Story::GROUP_READ])]
@@ -74,6 +78,17 @@ class Test
     public function setName(string $name): self
     {
         $this->name = $name;
+        return $this;
+    }
+
+    public function getDescription(): ?string
+    {
+        return $this->description;
+    }
+
+    public function setDescription(?string $description): self
+    {
+        $this->description = $description;
         return $this;
     }
 
